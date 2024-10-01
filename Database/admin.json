@@ -1,0 +1,25 @@
+{
+    "admins": [
+      {
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "password": "Admin@1234"
+      },
+      {
+        "name": "Jane Smith",
+        "email": "jane.smith@example.com",
+        "password": "Password@5678"
+      },
+      {
+        "name": "Robert Brown",
+        "email": "robert.brown@example.com",
+        "password": "SecurePass@910"
+      },
+      {
+        "name": "Emily Johnson",
+        "email": "emily.johnson@example.com",
+        "password": "Passw0rd!2023"
+      }
+    ]
+  }
+  
