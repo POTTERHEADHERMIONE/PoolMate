@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class UserProfilePage extends StatelessWidget {
+class UserProfilePage extends StatefulWidget {
   const UserProfilePage({Key? key}) : super(key: key);
+
+  @override
+  _UserProfilePageState createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends State<UserProfilePage> {
+  bool isEditing = false; // This will toggle between view and edit mode
+  final TextEditingController emailController =
+      TextEditingController(text: 'john.doe@example.com');
+  final TextEditingController phoneController =
+      TextEditingController(text: '+1 234 567 890');
+  final TextEditingController locationController =
+      TextEditingController(text: 'New York, USA');
 
   @override
   Widget build(BuildContext context) {
@@ -14,12 +28,19 @@ class UserProfilePage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Profile', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Profile',
+          style: GoogleFonts.roboto(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              // TODO: Implement settings action
+              _showSettingsMenu(context);
             },
           ),
         ],
@@ -30,20 +51,24 @@ class UserProfilePage extends StatelessWidget {
             const SizedBox(height: 20),
             const CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder.svg?height=100&width=100'),
+              backgroundImage: NetworkImage(
+                  'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder.svg?height=100&width=100'),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'John Doe',
-              style: TextStyle(
+              style: GoogleFonts.roboto(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const Text(
+            Text(
               '@johndoe',
-              style: TextStyle(color: Colors.grey),
+              style: GoogleFonts.roboto(
+                color: Colors.grey,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 20),
             _buildInfoCard(),
@@ -54,49 +79,52 @@ class UserProfilePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF2A2A2A),
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.directions_car, color: Colors.white),
-              onPressed: () {
-                // TODO: Implement navigation action
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.notifications, color: Colors.white),
-              onPressed: () {
-                // TODO: Implement navigation action
-              },
-            ),
-            const SizedBox(width: 48), // Space for FAB
-            IconButton(
-              icon: const Icon(Icons.add, color: Colors.white),
-              onPressed: () {
-                // TODO: Implement navigation action
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.person, color: Colors.blue),
-              onPressed: () {
-                // TODO: Implement navigation action
-              },
-            ),
-          ],
-        ),
+    );
+  }
+
+  void _showSettingsMenu(BuildContext context) {
+    showModalBottomSheet(
+      backgroundColor: const Color(0xFF2A2A2A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Implement main action
-        },
-        child: const Icon(Icons.list),
-        backgroundColor: const Color(0xFF2A2A2A),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      context: context,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.edit, color: Colors.blue),
+                title: Text(
+                  'Edit Profile',
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    isEditing = true; // Enable edit mode
+                  });
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.exit_to_app, color: Colors.red),
+                title: Text(
+                  'Logout',
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Logged out successfully')),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -110,29 +138,59 @@ class UserProfilePage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.email, 'Email', 'john.doe@example.com'),
+          _buildInfoRow(Icons.email, 'Email', emailController, isEditing),
           const Divider(color: Colors.grey),
-          _buildInfoRow(Icons.phone, 'Phone', '+1 234 567 890'),
+          _buildInfoRow(Icons.phone, 'Phone', phoneController, isEditing),
           const Divider(color: Colors.grey),
-          _buildInfoRow(Icons.location_on, 'Location', 'New York, USA'),
+          _buildInfoRow(
+              Icons.location_on, 'Location', locationController, isEditing),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label,
+      TextEditingController controller, bool isEditable) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Icon(icon, color: Colors.blue),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(color: Colors.grey)),
-              Text(value, style: const TextStyle(color: Colors.white)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.roboto(
+                    color: Colors.grey,
+                    fontSize: 12,
+                  ),
+                ),
+                isEditable
+                    ? TextField(
+                        controller: controller,
+                        style: GoogleFonts.roboto(color: Colors.white),
+                        cursorColor: Colors.white,
+                        decoration: InputDecoration(
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey[700]!),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                      )
+                    : Text(
+                        controller.text,
+                        style: GoogleFonts.roboto(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+              ],
+            ),
           ),
         ],
       ),
@@ -155,14 +213,20 @@ class UserProfilePage extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2A2A2A),
+          decoration: const BoxDecoration(
+            color: Color(0xFF2A2A2A),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: Colors.blue),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white)),
+        Text(
+          label,
+          style: GoogleFonts.roboto(
+            color: Colors.white,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
@@ -178,9 +242,13 @@ class UserProfilePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Recent Activity',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: GoogleFonts.roboto(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           _buildActivityItem('Ride to Central Park', '2 days ago'),
@@ -201,8 +269,20 @@ class UserProfilePage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(color: Colors.white)),
-              Text(time, style: const TextStyle(color: Colors.grey)),
+              Text(
+                title,
+                style: GoogleFonts.roboto(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                time,
+                style: GoogleFonts.roboto(
+                  color: Colors.grey,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],

@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:poolmate/presentation/constants/constants.dart';
+import 'package:poolmate/presentation/detail/dashboard.dart';
 import 'package:poolmate/presentation/detail/newRoom.dart';
 import 'package:poolmate/presentation/detail/profile.dart';
 import 'package:poolmate/presentation/screens/register_page.dart';
-import 'package:poolmate/presentation/widgets/my_text_button.dart';
-import 'package:poolmate/presentation/detail/chat.dart'; 
+import "package:poolmate/presentation/widgets/my_text_button.dart";
+import 'package:poolmate/presentation/detail/chat.dart';
+import 'package:poolmate/presentation/widgets/testfiled_room.dart';
+import 'package:poolmate/presentation/widgets/text_field.dart';
 
 class DetailScreen extends StatefulWidget {
   @override
@@ -13,235 +16,219 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  final ScrollController _scrollController = ScrollController();
-  List<int> _roomNumbers = List.generate(6, (index) => index + 1);
-  bool _isLoadingMore = false;
+  int _currentIndex = 0; // For bottom navigation
+  List<AddressCard> cards = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
+  // Methods to add, edit, delete cards remain the same
+  void _addNewCard() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String sourceAddress = '';
+        String destinationAddress = '';
+
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: const Text('Add New Card', style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                _buildInputField('Source Address', (value) {
+                  sourceAddress = value;
+                }),
+                const SizedBox(height: 20),
+                _buildInputField('Destination Address', (value) {
+                  destinationAddress = value;
+                }),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            MyTextButton(
+                buttonName: 'Cancel',
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                bgColor: Colors.black,
+                textColor: Colors.white),
+            const SizedBox(height: 20),
+            MyTextButton(
+                buttonName: 'Add',
+                onTap: () {
+                  setState(() {
+                    cards.add(AddressCard(
+                      sourceAddress: sourceAddress,
+                      destinationAddress: destinationAddress,
+                    ));
+                  });
+                  Navigator.of(context).pop();
+                },
+                bgColor: Colors.black,
+                textColor: Colors.white),
+          ],
+        );
+      },
+    );
   }
 
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
+  void _editCard(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String sourceAddress = cards[index].sourceAddress;
+        String destinationAddress = cards[index].destinationAddress;
+
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: const Text('Edit Card', style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                _buildInputField(sourceAddress, (value) {
+                  sourceAddress = value;
+                }),
+                const SizedBox(height: 20),
+                _buildInputField(destinationAddress, (value) {
+                  destinationAddress = value;
+                }),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            MyTextButton(
+                buttonName: 'Cancel',
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                bgColor: Colors.black,
+                textColor: Colors.white),
+            const SizedBox(height: 20),
+            MyTextButton(
+                buttonName: 'Save',
+                onTap: () {
+                  setState(() {
+                    cards[index] = AddressCard(
+                      sourceAddress: sourceAddress,
+                      destinationAddress: destinationAddress,
+                    );
+                  });
+                  Navigator.of(context).pop();
+                },
+                bgColor: Colors.black,
+                textColor: Colors.white),
+          ],
+        );
+      },
+    );
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent && !_isLoadingMore) {
-      _loadMoreRooms();
+  Widget _buildInputField(String hintText, Function(String) onChanged) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
+        border: OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      ),
+      style: const TextStyle(fontSize: 14, color: Colors.white),
+      cursorWidth: 2.0,
+      cursorColor: Colors.blue,
+      onChanged: onChanged,
+    );
+  }
+
+  void _deleteCard(int index) {
+    setState(() {
+      cards.removeAt(index);
+    });
+  }
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Navigate based on the index or add a new card for New Room
+    switch (index) {
+      case 0:
+        Navigator.push(context, MaterialPageRoute(builder: (context) =>  ChatPage(title: 'Chat Room',)));
+        break;
+      case 1:
+        _addNewCard(); // Open the dialog to add a new card
+        break;
+      case 2:
+        Navigator.push(context, MaterialPageRoute(builder: (context) => UserProfilePage()));
+        break;
     }
-  }
-
-  Future<void> _loadMoreRooms() async {
-    setState(() {
-      _isLoadingMore = true;
-    });
-
-    // Simulate a network call or data fetching
-    await Future.delayed(Duration(seconds: 2));
-
-    setState(() {
-      int currentLength = _roomNumbers.length;
-      _roomNumbers.addAll(List.generate(6, (index) => currentLength + index + 1));
-      _isLoadingMore = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            // Handle back press
-          },
-        ),
-        title: Text(
-          'Search Room',
-          style: TextStyle(
-            fontFamily: 'SearchRoomFont', // use a custom font if required
-            fontSize: 15,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              // Handle settings press
-            },
-          ),
-        ],
+        title: const Text('Address Cards'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          controller: _scrollController, // Attach the controller
-          itemCount: _roomNumbers.length + (_isLoadingMore ? 1 : 0), // Add one for the loading indicator
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.7, // Adjust this value to change card aspect ratio
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemBuilder: (context, index) {
-            if (index < _roomNumbers.length) {
-              return RoomCard(roomNumber: _roomNumbers[index]);
-            } else {
-              // Show loading indicator
-              return Center(child: CircularProgressIndicator());
-            }
-          },
+      body: ListView.builder(
+        itemCount: cards.length,
+        itemBuilder: (context, index) {
+          return Card(
+            margin: const EdgeInsets.all(8.0),
+            child: ListTile(
+              title: Text(cards[index].sourceAddress),
+              subtitle: Text(cards[index].destinationAddress),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _editCard(index),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => _deleteCard(index),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      bottomNavigationBar: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30.0),
+          topRight: Radius.circular(30.0),
         ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        shape: CircularNotchedRectangle(),
-        notchMargin: 10,
-        child: Container(
-          height: 20,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              IconButton(
-                icon: Icon(Icons.directions_car),
-                onPressed: () {
-                  // Handle navigation action
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.bolt),
-                onPressed: () {
-                  // Handle lightning action
-                },
-              ),
-              SizedBox(width: 50), // Spacer for the floating button
-              IconButton(
-                icon: Icon(Icons.filter_list),
-                onPressed: () {
-                  // Handle filter action
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.person),
-                onPressed: () {
-                   Navigator.push(
-      context,
-      CupertinoPageRoute(
-        builder: (context) => UserProfilePage(), // Navigate to AddPage
-      ),
-    );
-                  
-                  // Handle profile action
-                },
-              ),
-            ],
-          ),
+        child: BottomNavigationBar(
+          backgroundColor: const Color(0xFF2A2A2A),
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey,
+          onTap: _onTabTapped,
+          currentIndex: _currentIndex, // This will be set when a new tab is tapped
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble),
+              label: 'Chat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_box),
+              label: 'New Room',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-   floatingActionButton: FloatingActionButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      CupertinoPageRoute(
-        builder: (context) => CreateRoomPage(), // Navigate to AddPage
-      ),
-    );
-  },
-  child: Icon(Icons.add),
-),
-
     );
   }
 }
 
-class RoomCard extends StatelessWidget {
-  final int roomNumber;
+class AddressCard {
+  String sourceAddress;
+  String destinationAddress;
 
-  const RoomCard({Key? key, required this.roomNumber}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 280, // Set a fixed height for the card
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        color: Color(0xFF2B2B2B),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // Adjust main axis alignment
-            children: <Widget>[
-              CircleAvatar(
-                backgroundColor: Colors.black87,
-                child: Text(
-                  '$roomNumber',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              SizedBox(height: 8), // Adjusted height
-              Text(
-                'Source Address to Destination Address',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis, // Added to handle overflow
-                maxLines: 1, // Limits to one line
-              ),
-              SizedBox(height: 16), // Adjusted height
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                          builder: (context) => RegisterPage(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Register',
-                      style: kBodyText.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8), // Adjusted height
-              MyTextButton(
-                buttonName: 'Join',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => ChatPage(title: 'Chat'),
-                    ),
-                  );
-                },
-                bgColor: Colors.white,
-                textColor: Colors.black87,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  AddressCard({required this.sourceAddress, required this.destinationAddress});
 }

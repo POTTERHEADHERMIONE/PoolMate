@@ -1,14 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:poolmate/presentation/constants/constants.dart';
-import 'package:poolmate/presentation/detail/detail.dart';
 import 'package:poolmate/presentation/screens/otp.dart';
 import 'package:poolmate/presentation/screens/signin_page.dart';
 import 'package:poolmate/presentation/screens/user.dart';
 import '../widgets/widget.dart'; // Ensure this import is valid
-import 'package:http/http.dart' as http;
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -17,25 +13,6 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   bool passwordVisibility = true;
- Future save() async {
-  var res = await http.post(
-    Uri.parse("http://localhost:8080/signin"),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
-      'email': user.email,
-      'password': user.password,
-    }),
-  );
-
-  print(res.body);
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => OTPPage()),
-  );
-}
-
   User user = User("", "");
 
   @override
@@ -87,14 +64,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                 return 'Enter Something';
                               }
                             },
-                            key: const ValueKey(
-                                'email_field'), // Provide a key if needed
+                            key: const ValueKey('email_field'),
                             hintText: 'Email',
                             inputType: TextInputType.emailAddress,
                           ),
                           MyPasswordField(
-                            controller:
-                                TextEditingController(text: user.password),
+                            controller: TextEditingController(text: user.password),
                             onChanged: (value) {
                               user.password = value;
                             },
@@ -103,9 +78,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 return 'Enter Something';
                               }
                             },
-
-                            key: const ValueKey(
-                                'password_field'), // Provide a key if needed
+                            key: const ValueKey('password_field'),
                             isPasswordVisible: passwordVisibility,
                             onTap: () {
                               setState(() {
@@ -113,9 +86,34 @@ class _RegisterPageState extends State<RegisterPage> {
                               });
                             },
                           ),
+                          SizedBox(height: 30), // Space between the form and button
+                          MyTextButton(
+                            buttonName: 'Register',
+                            onTap: () {
+                              // Print the user input for testing
+                              print('Email: ${user.email}');
+                              print('Password: ${user.password}');
+
+                              // Navigate to OTPPage after registration
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => OTPPage(user.email)),
+                              );
+
+                              // Show a Snackbar on register attempt
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Attempting to register...'),
+                                ),
+                              );
+                            },
+                            bgColor: Colors.white,
+                            textColor: Colors.black87,
+                          ),
                         ],
                       ),
                     ),
+                    Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -125,7 +123,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            // Navigate to Sign In page
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -143,26 +140,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                     SizedBox(height: 20),
-                    MyTextButton(
-                      buttonName: 'Register',
-                      onTap: () {
-                        // Implement registration logic here
-                        print('Email: ${user.email}');
-                        print('Password: ${user.password}');
-
-                        // Call the save method to register the user
-                        save();
-
-                        // Show a Snackbar on successful registration
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Registration successful!'),
-                          ),
-                        );
-                      },
-                      bgColor: Colors.white,
-                      textColor: Colors.black87,
-                    ),
                   ],
                 ),
               ),
